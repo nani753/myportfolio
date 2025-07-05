@@ -27,7 +27,8 @@ import {
   Bot,
   Star,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Send
 } from 'lucide-react';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
   const [activeSection, setActiveSection] = useState('home');
   const [isVisible, setIsVisible] = useState<{[key: string]: boolean}>({});
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -102,6 +104,43 @@ function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFormStatus('submitting');
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('https://formspree.io/f/mnnvyjyl', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setFormStatus('success');
+        form.reset();
+        // Reset form status after 5 seconds
+        setTimeout(() => {
+          setFormStatus('idle');
+        }, 5000);
+      } else {
+        setFormStatus('error');
+        setTimeout(() => {
+          setFormStatus('idle');
+        }, 5000);
+      }
+    } catch (error) {
+      setFormStatus('error');
+      setTimeout(() => {
+        setFormStatus('idle');
+      }, 5000);
+    }
   };
 
   const skills = [
@@ -715,56 +754,127 @@ function App() {
                 ))}
                 
                 <div className="flex space-x-4">
-                  <a href="#" className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110">
+                  <a 
+                    href="https://www.linkedin.com/in/nageswara-rao-papeneni-53798524b/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110"
+                  >
                     <Linkedin size={20} />
                   </a>
-                  <a href="#" className="p-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110">
+                  <a 
+                    href="https://github.com/nani753" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110"
+                  >
                     <Github size={20} />
                   </a>
                 </div>
               </div>
               
-              <form className={`space-y-6 bg-gray-50 p-6 rounded-xl shadow-sm transition-all duration-1000 animation-delay-500 ${isVisible.contact ? 'animate-slide-in-right' : 'opacity-0 translate-x-10'}`}>
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 hover:border-blue-400"
-                    placeholder="Enter your name"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 hover:border-blue-400"
-                    placeholder="Enter your email"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 hover:border-blue-400"
-                    placeholder="Tell me about the opportunity..."
-                  ></textarea>
-                </div>
-                <button
-                  type="submit"
-                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              <div className={`transition-all duration-1000 animation-delay-500 ${isVisible.contact ? 'animate-slide-in-right' : 'opacity-0 translate-x-10'}`}>
+                <form
+                  onSubmit={handleFormSubmit}
+                  className="space-y-6 bg-gray-50 p-6 rounded-xl shadow-sm relative overflow-hidden"
                 >
-                  Send Message
-                </button>
-              </form>
+                  {/* Success/Error Overlay */}
+                  {formStatus !== 'idle' && (
+                    <div className={`absolute inset-0 bg-white/95 backdrop-blur-sm flex items-center justify-center z-10 transition-all duration-500 ${
+                      formStatus === 'success' ? 'animate-fade-in' : formStatus === 'error' ? 'animate-fade-in' : ''
+                    }`}>
+                      <div className="text-center p-8">
+                        {formStatus === 'submitting' && (
+                          <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                        )}
+                        {formStatus === 'success' && (
+                          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                            <CheckCircle size={32} className="text-white" />
+                          </div>
+                        )}
+                        {formStatus === 'error' && (
+                          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                            <X size={32} className="text-white" />
+                          </div>
+                        )}
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                          {formStatus === 'submitting' && 'Sending Message...'}
+                          {formStatus === 'success' && 'Message Sent Successfully!'}
+                          {formStatus === 'error' && 'Something Went Wrong'}
+                        </h3>
+                        <p className="text-gray-600">
+                          {formStatus === 'submitting' && 'Please wait while we send your message.'}
+                          {formStatus === 'success' && 'Thank you for reaching out! I\'ll get back to you soon.'}
+                          {formStatus === 'error' && 'Please try again or contact me directly via email.'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Your Name
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      required
+                      disabled={formStatus === 'submitting'}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Enter your name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Your Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      disabled={formStatus === 'submitting'}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Enter your email"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={4}
+                      required
+                      disabled={formStatus === 'submitting'}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Tell me about the opportunity..."
+                    ></textarea>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={formStatus === 'submitting'}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                  >
+                    {formStatus === 'submitting' ? (
+                      <>
+                        <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={20} />
+                        <span>Send Message</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
